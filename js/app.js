@@ -8,6 +8,7 @@ let allCh     = [];
 let filtered  = [];
 let activeTab = 'ALL';
 let activeCh  = null;
+let currentFilteredIdx = -1;
 
 // ── SPLASH ─────────────────────────────────────────────────────────
 (function splash() {
@@ -18,7 +19,6 @@ let activeCh  = null;
     if (w >= 100) { w = 100; clearInterval(t); }
     fill.style.width = w + '%';
   }, 80);
-
   setTimeout(() => {
     document.getElementById('splash').style.opacity = '0';
     document.getElementById('splash').style.transition = 'opacity 0.4s';
@@ -29,16 +29,26 @@ let activeCh  = null;
   }, 1200);
 })();
 
+// ── AUTO LOAD SAVED PLAYLIST ────────────────────────────────────────
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('uzp_playlist');
+  if (saved) {
+    allCh = parseM3U(saved);
+    setTimeout(() => {
+      initChannels();
+      showToast('✅ ' + allCh.length + ' channels loaded');
+    }, 1400);
+  }
+});
+
 // ── NAV ─────────────────────────────────────────────────────────────
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const tab = btn.dataset.tab;
-
     if (tab === 'upload') {
       showUploadSheet();
-      // Revert active to previous
       setTimeout(() => {
         btn.classList.remove('active');
         document.querySelector('.nav-btn[data-tab="watch"]').classList.add('active');
@@ -53,7 +63,6 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 
 function showWatchView() {
   document.getElementById('playerSection').style.display = '';
-  document.getElementById('urlSection') && (document.getElementById('urlSection').style.display = '');
   document.getElementById('channelsSection').style.display = 'none';
   document.getElementById('emptyState').style.display = allCh.length ? 'none' : '';
 }
@@ -62,50 +71,55 @@ function showChannelsView() {
   if (!allCh.length) { showUploadSheet(); return; }
   document.getElementById('channelsSection').style.display = '';
   document.getElementById('emptyState').style.display = 'none';
+  // Scroll to currently playing channel
+  setTimeout(() => {
+    const active = document.querySelector('.ch-card.playing');
+    if (active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
 }
 
 // ── UPLOAD SHEET ────────────────────────────────────────────────────
 function showUploadSheet() {
-  let overlay = document.getElementById('uploadOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'uploadOverlay';
-    overlay.className = 'upload-overlay';
-    overlay.innerHTML = `
-      <div class="upload-sheet" id="uploadSheet">
-        <div class="sheet-handle"></div>
-        <div class="sheet-title">Load Playlist</div>
-        <div class="sheet-sub">Upload your .m3u or .m3u8 file</div>
-        <div class="drop-zone" id="dropZone">
-          <div class="drop-icon">📂</div>
-          <div class="drop-text">Tap to browse or <strong>drag & drop</strong><br>.m3u file here</div>
-        </div>
-        <button class="sheet-cancel" id="sheetCancel">Cancel</button>
-      </div>`;
-    document.body.appendChild(overlay);
+  // Remove old overlay to refresh
+  const old = document.getElementById('uploadOverlay');
+  if (old) old.remove();
 
-    document.getElementById('dropZone').addEventListener('click', () => {
-      document.getElementById('fileInput').click();
-    });
-    document.getElementById('sheetCancel').addEventListener('click', hideUploadSheet);
-    overlay.addEventListener('click', e => { if (e.target === overlay) hideUploadSheet(); });
+  const overlay = document.createElement('div');
+  overlay.id = 'uploadOverlay';
+  overlay.className = 'upload-overlay';
+  overlay.innerHTML = `
+    <div class="upload-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Load Playlist</div>
+      <div class="sheet-sub">Upload your .m3u or .m3u8 file</div>
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-icon">📂</div>
+        <div class="drop-text">Tap to browse or <strong>drag & drop</strong><br>.m3u file here</div>
+      </div>
+      ${allCh.length ? '<button class="sheet-clear" id="sheetClear">🗑 Clear Playlist</button>' : ''}
+      <button class="sheet-cancel" id="sheetCancel">Cancel</button>
+    </div>`;
+  document.body.appendChild(overlay);
 
-    // Drag & drop
-    const dz = document.getElementById('dropZone');
-    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
-    dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
-    dz.addEventListener('drop', e => {
-      e.preventDefault(); dz.classList.remove('drag');
-      const file = e.dataTransfer.files[0];
-      if (file) readFile(file);
-    });
-  }
-  overlay.classList.remove('hidden');
+  document.getElementById('dropZone').addEventListener('click', () => document.getElementById('fileInput').click());
+  document.getElementById('sheetCancel').addEventListener('click', hideUploadSheet);
+  overlay.addEventListener('click', e => { if (e.target === overlay) hideUploadSheet(); });
+  const clearBtn = document.getElementById('sheetClear');
+  if (clearBtn) clearBtn.addEventListener('click', clearPlaylist);
+
+  const dz = document.getElementById('dropZone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file) readFile(file);
+  });
 }
 
 function hideUploadSheet() {
   const o = document.getElementById('uploadOverlay');
-  if (o) o.classList.add('hidden');
+  if (o) o.remove();
 }
 
 // ── FILE INPUT ──────────────────────────────────────────────────────
@@ -115,6 +129,7 @@ document.getElementById('fileInput').addEventListener('change', function() {
 });
 
 function readFile(file) {
+  showToast('⏳ Loading...');
   const reader = new FileReader();
   reader.onload = e => {
     localStorage.setItem('uzp_playlist', e.target.result);
@@ -126,7 +141,6 @@ function readFile(file) {
   reader.readAsText(file);
 }
 
-
 // ── PARSE M3U ───────────────────────────────────────────────────────
 function parseM3U(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
@@ -134,7 +148,7 @@ function parseM3U(text) {
   for (let i = 0; i < lines.length; i++) {
     if (!lines[i].startsWith('#EXTINF')) continue;
     const extinf = lines[i];
-    const url = lines[i + 1] && !lines[i + 1].startsWith('#') ? lines[i + 1] : '';
+    const url = lines[i+1] && !lines[i+1].startsWith('#') ? lines[i+1] : '';
     if (!url) continue;
     const nameM  = extinf.match(/,(.+)$/);
     const groupM = extinf.match(/group-title="([^"]*)"/i);
@@ -158,11 +172,25 @@ function initChannels() {
   document.getElementById('emptyState').style.display = 'none';
   document.getElementById('channelsSection').style.display = '';
   document.getElementById('chCount').textContent = allCh.length;
-
-  // Switch to channels view
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.nav-btn[data-tab="channels"]').classList.add('active');
   showChannelsView();
+}
+
+// ── CLEAR PLAYLIST ───────────────────────────────────────────────────
+function clearPlaylist() {
+  localStorage.removeItem('uzp_playlist');
+  allCh = []; filtered = []; activeCh = null; currentFilteredIdx = -1;
+  hideUploadSheet();
+  document.getElementById('channelsSection').style.display = 'none';
+  document.getElementById('emptyState').style.display = '';
+  document.getElementById('nowPlaying').style.display = 'none';
+  document.getElementById('liveBadge').style.display = 'none';
+  document.getElementById('vIdle').style.display = 'flex';
+  document.getElementById('urlInput').value = '';
+  if (hlsInst) { hlsInst.destroy(); hlsInst = null; }
+  document.getElementById('vid').src = '';
+  showToast('🗑 Playlist cleared');
 }
 
 // ── TABS ────────────────────────────────────────────────────────────
@@ -173,7 +201,6 @@ function buildTabs() {
     <button class="tab-btn${g === 'ALL' ? ' active' : ''}" data-g="${escH(g)}">
       ${g === 'ALL' ? '🌐 All' : '⚽ ' + escH(g)}
     </button>`).join('');
-
   tabs.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       activeTab = btn.dataset.g;
@@ -188,10 +215,11 @@ function buildTabs() {
 function filterAndRender() {
   const q = (document.getElementById('searchInput').value || '').toLowerCase();
   filtered = allCh.filter(c => {
-    const grpOk = activeTab === 'ALL' || c.group === activeTab;
+    const grpOk  = activeTab === 'ALL' || c.group === activeTab;
     const srchOk = !q || c.name.toLowerCase().includes(q) || c.group.toLowerCase().includes(q);
     return grpOk && srchOk;
   });
+  currentFilteredIdx = filtered.findIndex(c => c.url === activeCh);
   document.getElementById('chCount').textContent = filtered.length;
   renderGrid();
 }
@@ -211,7 +239,9 @@ function renderGrid() {
         <div class="ch-group">${escH(ch.group)}</div>
       </div>
       <div class="ch-play-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        ${activeCh === ch.url
+          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#00e84d"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
+          : '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>'}
       </div>
     </div>`).join('');
 }
@@ -221,8 +251,8 @@ function playChannel(idx) {
   const ch = filtered[idx];
   if (!ch) return;
   activeCh = ch.url;
+  currentFilteredIdx = idx;
 
-  // Update UI
   document.getElementById('urlInput').value = ch.url;
   document.getElementById('npName').textContent = ch.name;
   document.getElementById('npGroup').textContent = ch.group;
@@ -230,15 +260,23 @@ function playChannel(idx) {
   document.getElementById('liveBadge').style.display = 'flex';
   renderGrid();
 
-  // Switch to watch view
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.nav-btn[data-tab="watch"]').classList.add('active');
-  showWatchView();
-
-  // Scroll to top
-  document.querySelector('.main').scrollTo({ top: 0, behavior: 'smooth' });
+  // Stay on current view — only scroll if on watch tab
+  const onWatch = document.querySelector('.nav-btn[data-tab="watch"]').classList.contains('active');
+  if (onWatch) {
+    document.querySelector('.main').scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   startStream(ch.url);
+}
+
+// ── PREV / NEXT CHANNEL ─────────────────────────────────────────────
+function prevChannel() {
+  if (currentFilteredIdx > 0) playChannel(currentFilteredIdx - 1);
+}
+
+function nextChannel() {
+  if (currentFilteredIdx !== -1 && currentFilteredIdx < filtered.length - 1)
+    playChannel(currentFilteredIdx + 1);
 }
 
 // ── PLAY BUTTON (manual URL) ─────────────────────────────────────────
@@ -353,17 +391,19 @@ document.getElementById('vLoadBtn').addEventListener('click', showUploadSheet);
 document.getElementById('emptyBtn').addEventListener('click', showUploadSheet);
 document.getElementById('emptyState').style.display = '';
 
+// ── TOAST ────────────────────────────────────────────────────────────
 function showToast(msg) {
   let t = document.getElementById('toast');
   if (!t) {
     t = document.createElement('div');
     t.id = 'toast';
-    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(20,20,40,0.95);border:1px solid rgba(255,255,255,0.1);color:#f4f4ff;font-family:Outfit,sans-serif;font-size:13px;padding:10px 20px;border-radius:20px;z-index:700;white-space:nowrap;transition:opacity 0.4s;';
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(20,20,40,0.95);border:1px solid rgba(255,255,255,0.1);color:#f4f4ff;font-family:Outfit,sans-serif;font-size:13px;padding:10px 20px;border-radius:20px;z-index:700;white-space:nowrap;transition:opacity 0.4s;pointer-events:none;';
     document.body.appendChild(t);
   }
-  t.textContent = msg;
+  t.textContent  = msg;
   t.style.opacity = '1';
-  setTimeout(() => { t.style.opacity = '0'; }, 3000);
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
 }
 
 // ── HELPER ────────────────────────────────────────────────────────────
