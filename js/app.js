@@ -10,6 +10,22 @@ let activeTab = 'ALL';
 let activeCh  = null;
 let currentFilteredIdx = -1;
 
+// ── BUILT-IN PLAYLISTS ──────────────────────────────────────────────
+const BUILT_IN = [
+  {
+    name: '⚽ Football',
+    url: 'https://raw.githubusercontent.com/boexaw-ship-it/uzp/main/playlists/football_playlist.m3u'
+  },
+  {
+    name: '🎬 Movies',
+    url: 'https://raw.githubusercontent.com/boexaw-ship-it/uzp/main/playlists/movies_playlist.m3u'
+  },
+  {
+    name: '🏆 Sports',
+    url: 'https://raw.githubusercontent.com/boexaw-ship-it/uzp/main/playlists/sports_playlist.m3u'
+  }
+];
+
 // ── SPLASH ─────────────────────────────────────────────────────────
 (function splash() {
   const fill = document.getElementById('splashFill');
@@ -87,11 +103,17 @@ function showUploadSheet() {
   const overlay = document.createElement('div');
   overlay.id = 'uploadOverlay';
   overlay.className = 'upload-overlay';
+  const biHtml = BUILT_IN.map((p,i) =>
+    `<button class="builtin-btn" onclick="loadBuiltIn(${i})">${p.name}</button>`
+  ).join('');
+
   overlay.innerHTML = `
     <div class="upload-sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title">Load Playlist</div>
-      <div class="sheet-sub">Upload your .m3u or .m3u8 file</div>
+      <div class="sheet-sub">Choose a playlist or upload .m3u file</div>
+      <div class="builtin-list">${biHtml}</div>
+      <div class="sheet-divider">OR UPLOAD FILE</div>
       <div class="drop-zone" id="dropZone">
         <div class="drop-icon">📂</div>
         <div class="drop-text">Tap to browse or <strong>drag & drop</strong><br>.m3u file here</div>
@@ -175,6 +197,24 @@ function initChannels() {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.nav-btn[data-tab="channels"]').classList.add('active');
   showChannelsView();
+}
+
+// ── LOAD BUILT-IN PLAYLIST ──────────────────────────────────────────
+async function loadBuiltIn(idx) {
+  const p = BUILT_IN[idx];
+  hideUploadSheet();
+  showToast('⏳ Loading ' + p.name + '...');
+  try {
+    const res  = await fetch(p.url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    localStorage.setItem('uzp_playlist', text);
+    allCh = parseM3U(text);
+    initChannels();
+    showToast('✅ ' + allCh.length + ' channels loaded');
+  } catch(e) {
+    showToast('❌ Failed — check internet connection');
+  }
 }
 
 // ── CLEAR PLAYLIST ───────────────────────────────────────────────────
