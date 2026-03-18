@@ -250,6 +250,21 @@ video {
 }
 .np-group { font-size: 11px; color: var(--muted); margin-top: 1px; }
 
+.np-controls { display:flex; gap:4px; flex-shrink:0; }
+.np-btn {
+  width:32px; height:32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 20px; line-height:1;
+  cursor: pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition: all 0.2s;
+}
+.np-btn:hover { border-color: var(--accent); color: var(--accent); }
+.np-btn:active { transform: scale(0.92); }
+
 .res-sel {
   background: var(--surface);
   border: 1px solid var(--border);
