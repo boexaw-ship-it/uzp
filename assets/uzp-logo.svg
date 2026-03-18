@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <defs>
+    <radialGradient id="ballGrad" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#c8ffd0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#00cc44" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Background pill -->
+  <rect x="0" y="0" width="400" height="120" rx="20" fill="#0a0a0f"/>
+
+  <!-- Glow behind ball -->
+  <circle cx="62" cy="60" r="38" fill="#00ff6620" />
+
+  <!-- Football -->
+  <circle cx="62" cy="60" r="34" fill="url(#ballGrad)" filter="url(#shadow)"/>
+
+  <!-- Pentagon patches -->
+  <!-- Center pentagon -->
+  <polygon points="62,42 73,50 69,63 55,63 51,50" fill="#111" opacity="0.85"/>
+  <!-- Top left -->
+  <polygon points="43,48 51,43 51,50 44,55" fill="#111" opacity="0.75"/>
+  <!-- Top right -->
+  <polygon points="81,48 73,43 73,50 80,55" fill="#111" opacity="0.75"/>
+  <!-- Bottom left -->
+  <polygon points="44,72 51,67 55,63 50,76" fill="#111" opacity="0.75"/>
+  <!-- Bottom right -->
+  <polygon points="80,72 73,67 69,63 74,76" fill="#111" opacity="0.75"/>
+
+  <!-- Shine -->
+  <ellipse cx="52" cy="46" rx="8" ry="5" fill="white" opacity="0.35" transform="rotate(-20,52,46)"/>
+
+  <!-- UZ text -->
+  <text
+    x="115" y="78"
+    font-family="'Bebas Neue', 'Arial Black', sans-serif"
+    font-size="68"
+    font-weight="900"
+    fill="#00e84d"
+    filter="url(#glow)"
+    letter-spacing="4"
+  >UZ</text>
+
+  <!-- P text -->
+  <text
+    x="258" y="78"
+    font-family="'Bebas Neue', 'Arial Black', sans-serif"
+    font-size="68"
+    font-weight="900"
+    fill="#ffffff"
+    letter-spacing="2"
+  >P</text>
+
+  <!-- Tagline -->
+  <text
+    x="116" y="98"
+    font-family="Arial, sans-serif"
+    font-size="11"
+    font-weight="600"
+    fill="#00e84d"
+    opacity="0.7"
+    letter-spacing="5"
+  >LIVE SPORTS PLAYER</text>
+
+  <!-- Accent line under UZ -->
+  <rect x="115" y="84" width="130" height="2" rx="1" fill="#00e84d" opacity="0.4"/>
+
+</svg>
