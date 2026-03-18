@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>UZ P — Live Sports</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#080810">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<!-- ── SPLASH ── -->
+<div class="splash" id="splash">
+  <div class="splash-logo">
+    <span class="splash-uz">UZ</span><span class="splash-p"> P</span>
+  </div>
+  <div class="splash-sub">LIVE SPORTS PLAYER</div>
+  <div class="splash-bar"><div class="splash-fill" id="splashFill"></div></div>
+</div>
+
+<!-- ── APP ── -->
+<div class="app hidden" id="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-uz">UZ</span><span class="logo-p"> P</span>
+    </div>
+    <div class="header-right">
+      <div class="live-badge" id="liveBadge" style="display:none">
+        <span class="live-dot"></span> LIVE
+      </div>
+      <button class="icon-btn" id="uploadBtn" title="Load Playlist">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </button>
+      <button class="icon-btn" id="searchBtn" title="Search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Search bar (hidden by default) -->
+  <div class="search-bar" id="searchBar" style="display:none">
+    <input class="search-input" id="searchInput" type="text" placeholder="Search channels..." autocomplete="off">
+    <button class="search-close" id="searchClose">✕</button>
+  </div>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- Player section -->
+    <section class="player-section" id="playerSection">
+      <div class="player-wrap">
+        <div class="video-box" id="videoBox">
+          <video id="vid" controls playsinline webkit-playsinline></video>
+
+          <!-- Idle -->
+          <div class="v-idle" id="vIdle">
+            <div class="v-idle-icon">⚽</div>
+            <div class="v-idle-text">Select a channel to watch</div>
+            <button class="v-load-btn" id="vLoadBtn">Load Playlist</button>
+          </div>
+
+          <!-- Spinner -->
+          <div class="v-spinner" id="vSpinner">
+            <div class="v-ring"></div>
+          </div>
+
+          <!-- Error -->
+          <div class="v-error" id="vError">
+            <div class="v-err-icon">📡</div>
+            <div class="v-err-title">Stream Unavailable</div>
+            <div class="v-err-sub">Try another channel</div>
+          </div>
+        </div>
+
+        <!-- Now playing info -->
+        <div class="now-playing" id="nowPlaying" style="display:none">
+          <div class="np-left">
+            <div class="np-dot"></div>
+            <div class="np-info">
+              <div class="np-name" id="npName">—</div>
+              <div class="np-group" id="npGroup">—</div>
+            </div>
+          </div>
+          <select class="res-sel" id="resSel" style="display:none" onchange="changeRes(this.value)">
+            <option value="-1">Auto</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- URL input -->
+    <section class="url-section" id="urlSection">
+      <div class="url-row">
+        <input class="url-input" id="urlInput" type="url"
+          placeholder="Paste .m3u8 stream URL here..."
+          autocomplete="off" spellcheck="false" inputmode="url">
+        <button class="play-btn" id="playBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          PLAY
+        </button>
+      </div>
+    </section>
+
+    <!-- Channels section -->
+    <section class="channels-section" id="channelsSection" style="display:none">
+      <div class="ch-header">
+        <div class="ch-title">CHANNELS</div>
+        <div class="ch-count" id="chCount">0</div>
+      </div>
+
+      <!-- Category tabs -->
+      <div class="tabs-wrap">
+        <div class="tabs" id="tabs"></div>
+      </div>
+
+      <!-- Channel grid -->
+      <div class="ch-grid" id="chGrid"></div>
+    </section>
+
+    <!-- Empty state -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">📂</div>
+      <div class="empty-title">No Playlist Loaded</div>
+      <div class="empty-sub">Upload your .m3u file to see channels</div>
+      <button class="empty-btn" id="emptyBtn">Upload .m3u File</button>
+    </div>
+
+  </main>
+
+  <!-- File input (hidden) -->
+  <input type="file" id="fileInput" accept=".m3u,.m3u8" style="display:none">
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="watch">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <span>Watch</span>
+    </button>
+    <button class="nav-btn" data-tab="channels">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span>Channels</span>
+    </button>
+    <button class="nav-btn" data-tab="upload">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Upload</span>
+    </button>
+  </nav>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.12/hls.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
