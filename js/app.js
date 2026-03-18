@@ -117,12 +117,15 @@ document.getElementById('fileInput').addEventListener('change', function() {
 function readFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
+    localStorage.setItem('uzp_playlist', e.target.result);
     allCh = parseM3U(e.target.result);
     hideUploadSheet();
     initChannels();
+    showToast('✅ ' + allCh.length + ' channels loaded');
   };
   reader.readAsText(file);
 }
+
 
 // ── PARSE M3U ───────────────────────────────────────────────────────
 function parseM3U(text) {
@@ -349,6 +352,19 @@ document.getElementById('uploadBtn').addEventListener('click', showUploadSheet);
 document.getElementById('vLoadBtn').addEventListener('click', showUploadSheet);
 document.getElementById('emptyBtn').addEventListener('click', showUploadSheet);
 document.getElementById('emptyState').style.display = '';
+
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(20,20,40,0.95);border:1px solid rgba(255,255,255,0.1);color:#f4f4ff;font-family:Outfit,sans-serif;font-size:13px;padding:10px 20px;border-radius:20px;z-index:700;white-space:nowrap;transition:opacity 0.4s;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
 
 // ── HELPER ────────────────────────────────────────────────────────────
 function escH(s) {
