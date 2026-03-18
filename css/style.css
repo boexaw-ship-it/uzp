@@ -506,6 +506,42 @@ video {
 .drop-text { font-size: 13px; color: var(--muted); }
 .drop-text strong { color: var(--accent); }
 
+.builtin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.builtin-btn {
+  width: 100%;
+  background: rgba(0,232,77,0.08);
+  border: 1px solid rgba(0,232,77,0.2);
+  border-radius: 12px;
+  color: #00e84d;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px; font-weight: 700;
+  padding: 14px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  text-align: left;
+  letter-spacing: 0.5px;
+}
+.builtin-btn:hover { background: rgba(0,232,77,0.16); transform: translateY(-1px); }
+.builtin-btn:active { transform: scale(0.98); }
+
+.sheet-divider {
+  display: flex; align-items: center; gap: 10px;
+  color: #5a5a7a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+.sheet-divider::before, .sheet-divider::after {
+  content: ''; flex: 1;
+  height: 1px; background: rgba(255,255,255,0.07);
+}
+
 .sheet-clear {
   width: 100%;
   background: rgba(255,60,60,0.08);
