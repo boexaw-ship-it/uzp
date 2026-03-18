@@ -250,21 +250,6 @@ video {
 }
 .np-group { font-size: 11px; color: var(--muted); margin-top: 1px; }
 
-.np-controls { display:flex; gap:4px; flex-shrink:0; }
-.np-btn {
-  width:32px; height:32px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 20px; line-height:1;
-  cursor: pointer;
-  display:flex; align-items:center; justify-content:center;
-  transition: all 0.2s;
-}
-.np-btn:hover { border-color: var(--accent); color: var(--accent); }
-.np-btn:active { transform: scale(0.92); }
-
 .res-sel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -520,6 +505,21 @@ video {
 .drop-icon { font-size: 36px; margin-bottom: 8px; }
 .drop-text { font-size: 13px; color: var(--muted); }
 .drop-text strong { color: var(--accent); }
+
+.sheet-clear {
+  width: 100%;
+  background: rgba(255,60,60,0.08);
+  border: 1px solid rgba(255,60,60,0.2);
+  border-radius: 12px;
+  color: #ff4466;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px; font-weight: 600;
+  padding: 12px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+}
+.sheet-clear:hover { background: rgba(255,60,60,0.15); }
 
 .sheet-cancel {
   width: 100%;
