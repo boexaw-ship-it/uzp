@@ -194,6 +194,9 @@ function initChannels() {
   document.getElementById('emptyState').style.display = 'none';
   document.getElementById('channelsSection').style.display = '';
   document.getElementById('chCount').textContent = allCh.length;
+  // Hide playlist cards when channels loaded
+  const ps = document.getElementById('playlistSection');
+  if (ps) ps.style.display = 'none';
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.nav-btn[data-tab="channels"]').classList.add('active');
   showChannelsView();
@@ -223,7 +226,10 @@ function clearPlaylist() {
   allCh = []; filtered = []; activeCh = null; currentFilteredIdx = -1;
   hideUploadSheet();
   document.getElementById('channelsSection').style.display = 'none';
-  document.getElementById('emptyState').style.display = '';
+  document.getElementById('emptyState').style.display = 'none';
+  // Show playlist cards again
+  const ps = document.getElementById('playlistSection');
+  if (ps) ps.style.display = 'flex';
   document.getElementById('nowPlaying').style.display = 'none';
   document.getElementById('liveBadge').style.display = 'none';
   document.getElementById('vIdle').style.display = 'flex';
@@ -429,7 +435,7 @@ document.getElementById('searchInput').addEventListener('input', () => {
 document.getElementById('uploadBtn').addEventListener('click', showUploadSheet);
 document.getElementById('vLoadBtn').addEventListener('click', showUploadSheet);
 document.getElementById('emptyBtn').addEventListener('click', showUploadSheet);
-document.getElementById('emptyState').style.display = '';
+// emptyState hidden — playlist cards shown instead
 
 // ── TOAST ────────────────────────────────────────────────────────────
 function showToast(msg) {
