@@ -1,0 +1,76 @@
+name: 🔄 Update Socolive Playlist
+
+on:
+  # ── MANUAL RUN ──────────────────────────────────────────────────────
+  # GitHub → Actions → Update Socolive Playlist → Run workflow
+  workflow_dispatch:
+
+  # ── MATCH TIME SCHEDULE (UTC) ────────────────────────────────────────
+  # Myanmar Time = UTC + 6:30
+  schedule:
+    # 7:00 PM MMT  → Asian leagues (J-League, K-League, Thai, etc.)
+    - cron: "25 12 * * *"
+
+    # 9:30 PM MMT  → European afternoon (Bundesliga, Ligue 1, etc.)
+    - cron: "55 14 * * *"
+
+    # 11:30 PM MMT → Champions League / Europa / EPL prime time
+    - cron: "55 16 * * *"
+
+    # 2:00 AM MMT  → Late matches (La Liga, Serie A late)
+    - cron: "25 19 * * *"
+
+    # Weekends — extra run Saturday & Sunday 6:00 PM MMT
+    - cron: "25 11 * * 6"
+    - cron: "25 11 * * 0"
+
+jobs:
+  update-playlist:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: 🏃 Run fetch_socolive.py
+        run: python scripts/fetch_socolive.py
+
+      - name: 🔍 Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet playlists/socolive_live.m3u 2>/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 💾 Commit updated playlist
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add playlists/socolive_live.m3u
+          git commit -m "🔄 socolive_live.m3u [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push
+
+      - name: 📊 Summary
+        run: |
+          echo "## Result" >> $GITHUB_STEP_SUMMARY
+          if [ -f playlists/socolive_live.m3u ]; then
+            COUNT=$(grep -c "^#EXTINF" playlists/socolive_live.m3u || echo 0)
+            echo "✅ $COUNT channels | $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No playlist generated" >> $GITHUB_STEP_SUMMARY
+          fi
