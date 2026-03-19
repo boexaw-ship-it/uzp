@@ -492,6 +492,17 @@ video {
 .pl-card:hover::before { opacity: 1; }
 .pl-card:active { transform: scale(0.98); }
 
+.pl-live {
+  border-color: rgba(255,50,50,0.2);
+  background: rgba(255,30,30,0.04);
+}
+.pl-live::before { background: #ff3333; }
+.pl-live:hover {
+  border-color: rgba(255,50,50,0.4);
+  background: rgba(255,30,30,0.08);
+}
+.pl-live .pl-arrow { color: #ff4444; }
+
 .pl-upload {
   border-style: dashed;
   border-color: rgba(255,255,255,0.1);
